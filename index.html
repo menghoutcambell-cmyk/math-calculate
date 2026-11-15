@@ -1,0 +1,223 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Learning Calculator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #101827;
+  color: white;
+}
+.container {
+  max-width: 600px;
+  margin: auto;
+}
+h1 { text-align: center; color: #55d6ff; }
+.card {
+  background: #1d2a3d;
+  padding: 18px;
+  border-radius: 15px;
+  margin: 15px 0;
+}
+#display {
+  width: 100%;
+  padding: 18px;
+  font-size: 26px;
+  border: none;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  background: #edf5ff;
+  color: #111;
+}
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+button {
+  padding: 16px 5px;
+  border: none;
+  border-radius: 9px;
+  background: #34465f;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+button:active { opacity: .7; }
+.operator { background: #087eae; }
+.equal { background: #10a875; }
+.clear { background: #cf4657; }
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 7px 0;
+  border-radius: 8px;
+  border: none;
+  font-size: 17px;
+}
+.action { background: #087eae; width: 100%; }
+#result { color: #55e6a5; line-height: 1.6; }
+canvas { background: white; border-radius: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📚 Math Learning Calculator</h1>
+
+<div class="card">
+<h2>🧮 Calculator</h2>
+<input id="display" placeholder="Enter calculation" readonly>
+
+<div class="buttons">
+<button class="clear" onclick="clearDisplay()">AC</button>
+<button onclick="add('(')">(</button>
+<button onclick="add(')')">)</button>
+<button class="operator" onclick="add('/')">÷</button>
+
+<button onclick="add('7')">7</button>
+<button onclick="add('8')">8</button>
+<button onclick="add('9')">9</button>
+<button class="operator" onclick="add('*')">×</button>
+
+<button onclick="add('4')">4</button>
+<button onclick="add('5')">5</button>
+<button onclick="add('6')">6</button>
+<button class="operator" onclick="add('-')">−</button>
+
+<button onclick="add('1')">1</button>
+<button onclick="add('2')">2</button>
+<button onclick="add('3')">3</button>
+<button class="operator" onclick="add('+')">+</button>
+
+<button onclick="add('0')">0</button>
+<button onclick="add('.')">.</button>
+<button onclick="backspace()">⌫</button>
+<button class="equal" onclick="calculate()">=</button>
+</div>
+<p id="result">Your explanation will appear here.</p>
+</div>
+
+<div class="card">
+<h2>📈 Graph Drawing</h2>
+<p>Enter a mathematical function, for example x*x or 2*x+1.</p>
+<input id="equation" value="x*x" placeholder="Enter function">
+<button class="action" onclick="drawGraph()">Draw Graph</button>
+<canvas id="graph"></canvas>
+</div>
+
+<div class="card">
+<h2>🎓 Math Learning</h2>
+<p>Example: Solve 25 × 4</p>
+<button class="action" onclick="learn()">Show Example</button>
+<p id="lesson"></p>
+</div>
+</div>
+
+<script>
+function add(value) {
+  document.getElementById('display').value += value;
+}
+
+function clearDisplay() {
+  document.getElementById('display').value = '';
+  document.getElementById('result').textContent =
+    'Your explanation will appear here.';
+}
+
+function backspace() {
+  const d = document.getElementById('display');
+  d.value = d.value.slice(0, -1);
+}
+
+function calculate() {
+  const expression = document.getElementById('display').value;
+  const resultBox = document.getElementById('result');
+
+  if (!/^[0-9+\-*/().\s]+$/.test(expression)) {
+    resultBox.textContent = 'Invalid calculation.';
+    return;
+  }
+
+  try {
+    const answer = Function('"use strict"; return (' + expression + ')')();
+
+    if (!Number.isFinite(answer)) throw new Error();
+
+    resultBox.innerHTML =
+      '<b>Answer: ' + answer + '</b><br>' +
+      'Expression: ' + expression + '<br>' +
+      'Study the operations and calculate them step by step.';
+  } catch {
+    resultBox.textContent = 'Invalid expression. Please try again.';
+  }
+}
+
+let chart;
+
+function drawGraph() {
+  const equation = document.getElementById('equation').value.trim();
+
+  if (!/^[0-9xX+\-*/().\s]*$/.test(equation) ||
+      !/[xX]/.test(equation)) {
+    alert('Enter a valid function using x, numbers and + - * /.');
+    return;
+  }
+
+  const xs = [];
+  const ys = [];
+
+  try {
+    const fn = Function('x', '"use strict"; return (' +
+      equation.replace(/x/gi, 'x') + ');');
+
+    for (let x = -10; x <= 10; x += 0.25) {
+      const y = fn(x);
+      xs.push(x);
+      ys.push(Number.isFinite(y) && Math.abs(y) < 1000 ? y : null);
+    }
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById('graph'), {
+      type: 'line',
+      data: {
+        labels: xs,
+        datasets: [{
+          label: 'y = ' + equation,
+          data: ys,
+          borderColor: '#087eae',
+          pointRadius: 0,
+          spanGaps: false
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'X' } },
+          y: { title: { display: true, text: 'Y' } }
+        }
+      }
+    });
+  } catch {
+    alert('Could not draw this function.');
+  }
+}
+
+function learn() {
+  document.getElementById('lesson').innerHTML =
+    '25 × 4 means 25 added 4 times.<br>' +
+    '25 + 25 + 25 + 25 = 100.<br>' +
+    '<b>Answer: 100</b>';
+}
+
+drawGraph();
+</script>
+</body>
+</html>
